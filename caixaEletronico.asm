@@ -6,22 +6,43 @@ mensagem_erro: .asciiz "\nSenha incorreta.\n"
 mensagem_bloqueado: .asciiz "\nConta Bloqueada!\n"
 mensagem_invalido: .asciiz "\nConta inexistente!\n"
 
+mensagem_menu: .asciiz "\n=== MENU CAIXA ELETRÔNICO ===\n1 - Consultar saldo\n2 - Deposito\n3 - Saque\n4 - Extrato\n0 - Sair\nOpção: "
+mensagem_saldo: .asciiz "Saldo atual: "
+mensagem_deposito: .asciiz "\nValor do depósito: "
+mensagem_saque: .asciiz "\nValor do saque: "
+mensagem_ok: .asciiz "\nOperação realizada com sucesso.\n"
+mensagem_valorInvalido: .asciiz "\nValor inválido.\n"
+mensagem_saldoInsuficiente: .asciiz "\nSaldo insuficiente.\n"
+mensagem_extrato: .asciiz "\n=== EXTRATO ===\n"
+mensagem_deposito2: .asciiz "Deposito: "
+mensagem_saque2: .asciiz "Saque: "
+mensagem_vazio: .asciiz "(vazio)"
+mensagem_quebraLinha: .asciiz "\n"
+
 conta1:
     .word 1234              # numero da conta
     .word 1111              # senha
     .word 0                 # tentativas
     .word 0                 # bloqueada (0 é não e 1 sim)
+    .word 1000              # saldo
+    .word 0                 # índice do extrato
+    .word 0,0,0,0,0         # extrato (últimas 5 transações)
 
 conta2:                     # conta 2 segue a mesma lógica da conta 1
     .word 5678
     .word 2222
     .word 0
     .word 0
+    .word 500           
+    .word 0
+    .word 0,0,0,0,0
 
 .text
 .global main 
 
 main:
+    j login
+
 login:
     # pedir número da conta 
     li $v0, 4               # aqui ele manda salvar o 4, que é um código de serviço para imprimir string, dentro do registrador $v0
@@ -87,14 +108,16 @@ login_sucesso:
     # aqui é onde zera o número de tentativas
     sw $zero, 8($t1)        # salva o valor 0 na posição 8($t1)
 
+    move $s0, $t1           # salva o "ponteiro" da conta logada em $s0
+
     li $v0, 4               # aqui repete o que foi lá na "pedir número da conta"
     la $a0, mensagem_sucesso
     syscall
     
-    # eu acho que é aqui que entra a etapa do menu e tals...
+    j menu 
 
-    li $v0, 10
-    syscall
+menu:
+
 
 bloquear:
     li $t7, 1               # aqui eu carrego o 1 no temporário $t7
