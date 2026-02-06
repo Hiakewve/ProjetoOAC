@@ -237,7 +237,7 @@ idx_ok:
 
 extrato:
     li $v0, 4
-    la $a0, msg_ext
+    la $a0, mensagem_extrato
     syscall
 
     addi $t0, $s0, 24    # base extrato
@@ -260,7 +260,7 @@ ext_loop:
 
     # deposito
     li $v0, 4
-    la $a0, msg_dep2
+    la $a0, mensagem_deposito2
     syscall
 
     li $v0, 1
@@ -268,13 +268,13 @@ ext_loop:
     syscall
 
     li $v0, 4
-    la $a0, msg_nl
+    la $a0, mensagem_quebraLinha
     syscall
     j ext_next
 
 ext_saque:
     li $v0, 4
-    la $a0, msg_saq2
+    la $a0, mensagem_saque2
     syscall
 
     sub $t5, $zero, $t4  # modulo
@@ -283,17 +283,17 @@ ext_saque:
     syscall
 
     li $v0, 4
-    la $a0, msg_nl
+    la $a0, mensagem_quebraLinha
     syscall
     j ext_next
 
 ext_vazio:
     li $v0, 4
-    la $a0, msg_vazio
+    la $a0, mensagem_vazio
     syscall
 
     li $v0, 4
-    la $a0, msg_nl
+    la $a0, mensagem_quebraLinha
     syscall
 
 ext_next:
@@ -302,7 +302,6 @@ ext_next:
 
 ext_fim:
     j menu
-
 
 bloquear:
     li $t7, 1               # aqui eu carrego o 1 no temporário $t7
