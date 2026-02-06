@@ -218,8 +218,91 @@ saldo_insuficiente:
 
     j menu
 
+registrar_extrato:
+    lw $t3, 20($s0)      # extrato_index
+    addi $t4, $s0, 24    # base extrato
+    sll $t5, $t3, 2      # idx * 4
+    add $t4, $t4, $t5
+    sw $t1, 0($t4)
+
+    addi $t3, $t3, 1
+    li $t6, 5
+    blt $t3, $t6, idx_ok
+    li $t3, 0
+
+idx_ok:
+    sw $t3, 20($s0)
+
+    jr $ra
+
 extrato:
-    
+    li $v0, 4
+    la $a0, msg_ext
+    syscall
+
+    addi $t0, $s0, 24    # base extrato
+    li $t1, 0            # i = 0
+
+    j menu
+
+ext_loop:
+    beq $t1, 5, ext_fim
+
+    sll $t2, $t1, 2
+    add $t3, $t0, $t2
+    lw $t4, 0($t3)       # valor
+
+    # imprimir "i: "
+    # (opcional) se quiser numerar, depois adicionamos
+
+    beq $t4, $zero, ext_vazio
+    bltz $t4, ext_saque
+
+    # deposito
+    li $v0, 4
+    la $a0, msg_dep2
+    syscall
+
+    li $v0, 1
+    move $a0, $t4
+    syscall
+
+    li $v0, 4
+    la $a0, msg_nl
+    syscall
+    j ext_next
+
+ext_saque:
+    li $v0, 4
+    la $a0, msg_saq2
+    syscall
+
+    sub $t5, $zero, $t4  # modulo
+    li $v0, 1
+    move $a0, $t5
+    syscall
+
+    li $v0, 4
+    la $a0, msg_nl
+    syscall
+    j ext_next
+
+ext_vazio:
+    li $v0, 4
+    la $a0, msg_vazio
+    syscall
+
+    li $v0, 4
+    la $a0, msg_nl
+    syscall
+
+ext_next:
+    addi $t1, $t1, 1
+    j ext_loop
+
+ext_fim:
+    j menu
+
 
 bloquear:
     li $t7, 1               # aqui eu carrego o 1 no temporário $t7
