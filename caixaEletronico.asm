@@ -117,6 +117,63 @@ login_sucesso:
     j menu 
 
 menu:
+    li $v0, 4               # funciona exatamente como visto anteriormente
+    la $a0, mensagem_menu
+    syscall
+
+    li $v0, 5               # também funciona ocmo foi visto anteriormente
+    syscall
+    move $t0, $v0
+
+    beq $t0, 1, verificar_saldo     # apenas verifica a escolha do usuário e coloca no registrador temporário $t0
+    beq $t0, 2, deposito 
+    beq $t0, 3, saque
+    beq $t0, 4, extrato
+    beq $t0, 0, sair
+    j menu
+
+sair:
+    move $s0, $zero         # limpa o "ponteiro" da conta, e agora o $s0 tem o valor de 0
+    j login                 # aqui ele vai para o inicio do programa novamente
+
+verificar_saldo:
+    lw $t1, 16($s0)         # aqui ele vai até os 16 bytes, que é onde tá a informação do saldo
+
+    li $v0, 4               # Como vimos anteriormente: Prepara para imprimir uma string
+    la $a0, mensagem_saldo
+    syscall
+
+    li $v0, 1               # aqui ele imprimi um inteiro (qie é o saldo). 
+    move $a0, $t1           # move o valor do saldo para $a0 que é para ser imprimido 
+    syscall
+
+    li $v0, 4               # novamente só prepara para imprimir a string
+    la $a0, mensagem_quebraLinha
+    syscall
+
+    j menu                  # retorno para o menu principal
+
+deposito:
+    li $v0, 4               # prepara para imprimir uma string
+    la $a0, mensagem_deposito
+    syscall
+
+    li $v0, 5               # lê o valor que o usuário quer depositar
+    syscall
+    move $t1, $v0           # $t1 recebe o valor do depósito
+
+    blez $t1, valor_invalido    # verificação se o valor é menor ou igual 0
+
+    lw $t2, 16($s0)         # Carrega o saldo atual da memória para $t2
+    add $t2, $t2, $t1       # Soma: saldo_novo = saldo_antigo + deposito
+    sw $t2, 16($s0)         # Salva o novo saldo de volta na memória da conta
+
+    jal registrar_extrato   # chama a sub-rotina para salvar no histórico
+
+    li $v0, 4               # prepara para imprimir uma string
+    la $a0, mensagem_ok
+    syscall
+    j menu
 
 
 bloquear:
