@@ -175,9 +175,53 @@ deposito:
     syscall
     j menu
 
+saque:
+    li $v0, 4
+    la $a0, mensagem_saque
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t1, $v0
+
+    blez $t1, valor_invalido
+
+    lw $t2, 16($s0)
+
+    blt $t2, $t1, saldo_insuficiente
+    sub $t2, $t2, $t1
+    sw $t2, 16($s0)
+
+    sub $t1, $zero, $t1
+
+    jal registrar_extrato
+
+    li $v0, 4
+
+    la $a0, mensagem_ok
+
+    syscall
+    
+    j menu
+
+valor_invalido:
+    li $v0, 4
+    la $a0, mensagem_valorInvalido
+    syscall
+
+    j menu
+
+saldo_insuficiente:
+    li $v0, 4
+    la $a0, mensagem_saldoInsuficiente
+    syscall
+
+    j menu
+
+extrato:
+    
 
 bloquear:
     li $t7, 1               # aqui eu carrego o 1 no temporário $t7
     sw $t7, 12($t1)         # gravo 1 na posição 12($t1), marcando o status como bloqueado
     j conta_bloqueada       # e ai avisa ao usuário do bloqueio...
-
