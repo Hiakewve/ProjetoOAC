@@ -243,8 +243,6 @@ extrato:
     addi $t0, $s0, 24    # base extrato
     li $t1, 0            # i = 0
 
-    j menu
-
 ext_loop:
     beq $t1, 5, ext_fim
 
