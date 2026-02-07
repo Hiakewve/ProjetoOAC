@@ -193,13 +193,10 @@ saque:
     sw $t2, 16($s0)
 
     sub $t1, $zero, $t1
-
     jal registrar_extrato
 
     li $v0, 4
-
     la $a0, mensagem_ok
-
     syscall
     
     j menu
