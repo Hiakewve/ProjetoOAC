@@ -1,11 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
 import subprocess
 
 MARS_PATH = "Mars4_5.jar"
 ASM_FILE = "caixaEletronico_servidor.asm"
 
-# aqui ele chama o mars e o arquivo para entrar em processo
 processo = subprocess.Popen(
     ["java", "-jar", MARS_PATH, ASM_FILE],
     stdin=subprocess.PIPE,
@@ -13,14 +11,16 @@ processo = subprocess.Popen(
     text=True
 )
 
-def enviar_comando(comando):
-    """
-    Envia um comando ao Assembly e lê todas as respostas
-    até encontrar OK ou ERRO.
-    Retorna a lista de linhas recebidas.
-    """
-    respostas = []
+BG_COLOR = "#1E1E2F"
+BTN_COLOR = "#3A7FF6"
+BTN_HOVER = "#2F6DE1"
+DANGER_COLOR = "#E74C3C"
+TEXT_COLOR = "#FFFFFF"
+FONT_TITLE = ("Segoe UI", 16, "bold")
+FONT_TEXT = ("Segoe UI", 11)
 
+def enviar_comando(comando):
+    respostas = []
     processo.stdin.write(comando + "\n")
     processo.stdin.flush()
 
@@ -28,65 +28,117 @@ def enviar_comando(comando):
         linha = processo.stdout.readline().strip()
         if linha:
             respostas.append(linha)
-        if linha == "OK" or linha == "ERRO":
+        if linha in ("OK", "ERRO"):
             break
-
     return respostas
 
 def enviar_sem_resposta(comando):
     processo.stdin.write(comando + "\n")
     processo.stdin.flush()
 
+def popup_info(titulo, mensagem):
+    popup = tk.Toplevel()
+    popup.title(titulo)
+    popup.geometry("320x180")
+    popup.configure(bg=BG_COLOR)
+    popup.resizable(False, False)
+    popup.grab_set()
+
+    tk.Label(popup, text=titulo, font=FONT_TITLE,
+             bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=15)
+
+    tk.Label(popup, text=mensagem, font=FONT_TEXT,
+             bg=BG_COLOR, fg=TEXT_COLOR, wraplength=280,
+             justify="center").pack(pady=10)
+
+    criar_botao(popup, "OK", popup.destroy).pack(pady=10)
+
+def popup_valor(titulo, texto):
+    popup = tk.Toplevel()
+    popup.title(titulo)
+    popup.geometry("320x220")
+    popup.configure(bg=BG_COLOR)
+    popup.resizable(False, False)
+    popup.grab_set()
+
+    tk.Label(popup, text=titulo, font=FONT_TITLE,
+             bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=15)
+
+    tk.Label(popup, text=texto, font=FONT_TEXT,
+             bg=BG_COLOR, fg=TEXT_COLOR).pack()
+
+    entry = tk.Entry(popup, font=FONT_TEXT, width=20)
+    entry.pack(pady=10)
+
+    resultado = {"valor": None}
+
+    def confirmar():
+        try:
+            resultado["valor"] = int(entry.get())
+            popup.destroy()
+        except ValueError:
+            popup_info("Erro", "Digite um número válido")
+
+    criar_botao(popup, "Confirmar", confirmar).pack(pady=5)
+    criar_botao(popup, "Cancelar", popup.destroy, DANGER_COLOR).pack()
+
+    popup.wait_window()
+    return resultado["valor"]
+
+def popup_extrato(texto):
+    popup = tk.Toplevel()
+    popup.title("Extrato")
+    popup.geometry("360x300")
+    popup.configure(bg=BG_COLOR)
+    popup.resizable(False, False)
+    popup.grab_set()
+
+    tk.Label(popup, text="Extrato", font=FONT_TITLE,
+             bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=10)
+
+    frame = tk.Frame(popup, bg=BG_COLOR)
+    frame.pack(fill="both", expand=True, padx=10)
+
+    scrollbar = tk.Scrollbar(frame)
+    scrollbar.pack(side="right", fill="y")
+
+    text = tk.Text(frame, bg="#2B2B3C", fg=TEXT_COLOR,
+                   font=FONT_TEXT, yscrollcommand=scrollbar.set,
+                   bd=0, height=10)
+    text.pack(fill="both", expand=True)
+    scrollbar.config(command=text.yview)
+
+    text.insert("1.0", texto)
+    text.config(state="disabled")
+
+    criar_botao(popup, "Fechar", popup.destroy).pack(pady=10)
+
 def fazer_login():
     conta = entry_conta.get()
     senha = entry_senha.get()
 
     if not conta or not senha:
-        messagebox.showwarning("Erro", "Preencha todos os campos!")
+        popup_info("Erro", "Preencha todos os campos")
         return
 
-    enviar_sem_resposta("LOGIN")
+    enviar_sem_resposta("L")
     enviar_sem_resposta(conta)
     respostas = enviar_comando(senha)
 
     if "OK" in respostas:
-        messagebox.showinfo("Sucesso", "Login realizado com sucesso!")
+        popup_info("Bem-vindo", "Login realizado com sucesso")
         abrir_menu()
     else:
-        messagebox.showerror("Erro", "Falha no login!")
-
-def abrir_menu():
-    janela_login.withdraw()
-
-    global janela_menu
-    janela_menu = tk.Toplevel()
-    janela_menu.title("ATM - Menu")
-    janela_menu.geometry("350x320")
-    janela_menu.resizable(False, False)
-
-    tk.Label(janela_menu, text="Menu Principal", font=("Arial", 14)).pack(pady=10)
-
-    tk.Button(janela_menu, text="Consultar Saldo", width=25, command=consultar_saldo).pack(pady=5)
-    tk.Button(janela_menu, text="Depositar", width=25, command=depositar).pack(pady=5)
-    tk.Button(janela_menu, text="Sacar", width=25, command=sacar).pack(pady=5)
-    tk.Button(janela_menu, text="Extrato", width=25, command=ver_extrato).pack(pady=5)
-    tk.Button(janela_menu, text="Logout", width=25, command=logout).pack(pady=15)
+        popup_info("Erro", "Falha no login")
 
 def consultar_saldo():
     respostas = enviar_comando("S")
-
-    saldo_encontrado = None
     for r in respostas:
         if r.startswith("SALDO"):
-            saldo_encontrado = r
-
-    if saldo_encontrado:
-        messagebox.showinfo("Saldo", saldo_encontrado)
-    else:
-        messagebox.showerror("Erro", "Erro ao consultar saldo")
+            popup_info("Saldo", r)
 
 def depositar():
-    valor = simpledialog.askinteger("Depósito", "Digite o valor do depósito:")
+    valor = popup_valor("Depósito", "Digite o valor do depósito")
     if valor is None:
         return
 
@@ -94,12 +146,12 @@ def depositar():
     respostas = enviar_comando(str(valor))
 
     if "OK" in respostas:
-        messagebox.showinfo("Sucesso", "Depósito realizado com sucesso!")
+        popup_info("Sucesso", "Depósito realizado com sucesso")
     else:
-        messagebox.showerror("Erro", "Erro no depósito")
+        popup_info("Erro", "Erro no depósito")
 
 def sacar():
-    valor = simpledialog.askinteger("Saque", "Digite o valor do saque:")
+    valor = popup_valor("Saque", "Digite o valor do saque")
     if valor is None:
         return
 
@@ -107,58 +159,90 @@ def sacar():
     respostas = enviar_comando(str(valor))
 
     if "OK" in respostas:
-        messagebox.showinfo("Sucesso", "Saque realizado com sucesso!")
+        popup_info("Sucesso", "Saque realizado com sucesso")
     else:
-        messagebox.showerror("Erro", "Saldo insuficiente ou erro")
+        popup_info("Erro", "Saldo insuficiente")
 
 def ver_extrato():
-    respostas = enviar_comando("EXTRATO")
-
-    linhas_formatadas = []
+    respostas = enviar_comando("E")
+    linhas = []
 
     for r in respostas:
         if r in ("OK", "ERRO"):
             continue
+        v = int(r)
+        if v > 0:
+            linhas.append(f"Depósito: {v}")
+        else:
+            linhas.append(f"Saque: {abs(v)}")
 
-        try:
-            valor = int(r)
-            if valor > 0:
-                linhas_formatadas.append(f"Depósito: {valor}")
-            elif valor < 0:
-                linhas_formatadas.append(f"Saque: {abs(valor)}")
-        except:
-            pass
-
-    texto = "\n".join(linhas_formatadas) if linhas_formatadas else "(extrato vazio)"
-    messagebox.showinfo("Extrato", texto)
+    texto = "\n".join(linhas) if linhas else "(extrato vazio)"
+    popup_extrato(texto)
 
 def logout():
-    enviar_sem_resposta("O")   
+    enviar_sem_resposta("O")
     janela_menu.destroy()
     janela_login.deiconify()
 
 def sair():
-    enviar_comando("EXIT")
-    processo.terminate()
+    enviar_sem_resposta("X")
     janela_login.destroy()
 
-# tela de login
+def criar_botao(pai, texto, comando, cor=BTN_COLOR):
+    return tk.Button(
+        pai, text=texto, command=comando,
+        bg=cor, fg=TEXT_COLOR,
+        font=FONT_TEXT,
+        width=22, height=2,
+        bd=0, cursor="hand2",
+        activebackground=BTN_HOVER
+    )
+
+def abrir_menu():
+    janela_login.withdraw()
+    global janela_menu
+
+    janela_menu = tk.Toplevel()
+    janela_menu.title("Menu")
+    janela_menu.geometry("360x420")
+    janela_menu.configure(bg=BG_COLOR)
+    janela_menu.resizable(False, False)
+
+    tk.Label(janela_menu, text="Menu Principal",
+             font=FONT_TITLE, bg=BG_COLOR,
+             fg=TEXT_COLOR).pack(pady=30)
+
+    criar_botao(janela_menu, "💰 Consultar Saldo", consultar_saldo).pack(pady=5)
+    criar_botao(janela_menu, "➕ Depositar", depositar).pack(pady=5)
+    criar_botao(janela_menu, "➖ Sacar", sacar).pack(pady=5)
+    criar_botao(janela_menu, "📄 Extrato", ver_extrato).pack(pady=5)
+    criar_botao(janela_menu, "🚪 Logout", logout, DANGER_COLOR).pack(pady=25)
+
 janela_login = tk.Tk()
-janela_login.title("Caixa Eletrônico - Login")
-janela_login.geometry("300x220")
+janela_login.title("Caixa Eletrônico")
+janela_login.geometry("360x420")
+janela_login.configure(bg=BG_COLOR)
 janela_login.resizable(False, False)
 
-tk.Label(janela_login, text="Caixa Eletrônico", font=("Arial", 14)).pack(pady=10)
+tk.Label(janela_login, text="💳 Caixa Eletrônico",
+         font=FONT_TITLE, bg=BG_COLOR,
+         fg=TEXT_COLOR).pack(pady=30)
 
-tk.Label(janela_login, text="Número da conta:").pack()
-entry_conta = tk.Entry(janela_login)
-entry_conta.pack()
+frame = tk.Frame(janela_login, bg=BG_COLOR)
+frame.pack()
 
-tk.Label(janela_login, text="Senha:").pack()
-entry_senha = tk.Entry(janela_login, show="*")
-entry_senha.pack()
+tk.Label(frame, text="Número da conta", bg=BG_COLOR,
+         fg=TEXT_COLOR).pack(anchor="w")
+entry_conta = tk.Entry(frame, font=FONT_TEXT, width=25)
+entry_conta.pack(pady=5)
 
-tk.Button(janela_login, text="Login", width=15, command=fazer_login).pack(pady=15)
-tk.Button(janela_login, text="Sair", width=15, command=sair).pack()
+tk.Label(frame, text="Senha", bg=BG_COLOR,
+         fg=TEXT_COLOR).pack(anchor="w", pady=(10, 0))
+entry_senha = tk.Entry(frame, font=FONT_TEXT,
+                       width=25, show="*")
+entry_senha.pack(pady=5)
+
+criar_botao(janela_login, "Entrar", fazer_login).pack(pady=20)
+criar_botao(janela_login, "Sair", sair, DANGER_COLOR).pack()
 
 janela_login.mainloop()
