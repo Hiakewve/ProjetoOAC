@@ -71,10 +71,20 @@ O projeto possui **caráter didático**, reforçando conceitos fundamentais de *
 - Sistema operacional Windows, Linux ou macOS
 
 ### ▶️ Passo a Passo para Execução
-1. **Clone o repositório**
+1. **Clone o repositório para sua máquina**
 2. **Acesse a pasta do projeto**
-3. **Execute o arquivo ".exe" lá presente**
-4. **Pronto, o programa está 100% funcional**
+3. **Vá até "Executável**
+4. **Execute: "Caixa Eletrônico.exe"**
+5. **Vai abrir o programa funcionando**
+
+### Se quiser testar funcionando, segue os números cadastrados para acessar o sistema:
+Conta 1:
+    Número da conta: 1234
+    Senha: 1111
+
+Conta 2: 
+    Número da conta: 5678
+    Senha: 2222
 
 ## 📌 Observações
 
